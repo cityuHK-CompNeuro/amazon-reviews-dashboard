@@ -26,7 +26,7 @@ def load_data_window():
         load_win = sg.Window("Load Data", load_layout)
 
         filename_switcher = {'Music': ['CDs_and_Vinyl_5', 'meta_CDs_and_Vinyl'],
-                            'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry'],
+                            'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry', 'embed_sort_Prime_Pantry'],
                             'Pets': ['Pet_Supplies_5', 'meta_Pet_Supplies']}
 
         while True:
@@ -45,6 +45,7 @@ def load_data_window():
                 data_file = osp.join(values["-IN-"], filename_switcher[products_type][0] + '.json')
                 meta_file = osp.join(values["-IN-"], filename_switcher[products_type][1] + '.json')
                 try:
+                    embed_sort_per_asin = {}
                     embed_sort_file = osp.join(values["-IN-"], filename_switcher[products_type][2] + '.json')
                     embed_sort_data_in_raw = read_json(embed_sort_file)
                     embed_sort_per_asin = sort_reviews_by_product(embed_sort_data_in_raw)
@@ -86,6 +87,14 @@ def drawChart(window, fig):
     # plt.clf()
     fig_agg = draw_figure(
         window['figCanvas'].TKCanvas, fig)
+    return fig_agg
+
+# def updateChart(fig_agg, window, fig):
+#     fig_agg.get_tk_widget().forget()
+#     # plt.cla()
+#     plt.clf()
+#     fig_agg = draw_figure(
+#         window['figCanvas'].TKCanvas, fig)
 
 def get_product_title_from_meta(asin_in, atitle_list):
     product_title = ''
@@ -122,7 +131,7 @@ def sort_reviews_by_product(full_reviews):
 
 def run_basic_analysis(full_reviews, meta_data_in_raw,**kwargs):
 
-    product_group = kwargs.get('product_group', 'Music')
+    product_group = kwargs.get('product_group', 'Kitchen')
 
     # How many individual Products?
     all_products = [fr['asin'] for fr in full_reviews]
@@ -264,7 +273,7 @@ def main():
     layout = [[sg.MenubarCustom(menu_def, tearoff=False)],
               [sg.Text(text="Please begin by Loading data via File->Load Data", key='status_text'),
               sg.Text("Most Helpful Reviews of Selected Product", pad=(225, 0), key='review-reader-status'),
-              sg.Text("Exemplar Reviews of Selected Product", pad=(75, 0), key='review-reader-status')],
+              sg.Text("Exemplar Reviews of Selected Product", pad=(65, 0), key='review-reader-status')],
               [sg.Canvas(key='figCanvas'), sg.Listbox(["Selected Reviews Will Display Here"], size=(60,5), pad=(0, 0), enable_events=False, key='review-reader-0'),
               sg.Listbox(["Selected Exemplar Reviews Will Display Here"], size=(60,5), pad=(0, 0), enable_events=False, key='review-reader-1'),],
               [sg.Text(text="Please Choose an Evaluation Criterion", key='eval_crit_text'), sg.Text(text="Highest Rated Products", pad=(200, 0), key='high_drop_text'),
@@ -308,6 +317,7 @@ def main():
             data_file = osp.join(data_path, filename_switcher[products_type][0] + '.json')
             meta_file = osp.join(data_path, filename_switcher[products_type][1] + '.json')
             try:
+                embed_sort_per_asin = {}
                 embed_sort_file = osp.join(data_path, filename_switcher[products_type][2] + '.json')
                 embed_sort_data_in_raw = read_json(embed_sort_file)
                 embed_sort_per_asin = sort_reviews_by_product(embed_sort_data_in_raw)
@@ -331,7 +341,7 @@ def main():
     window['status_text'].update(status_text)
     product_group = products_type
     figure_handle = scatter_plot_ratings(avg, count, products_type)
-    drawChart(window, figure_handle)
+    drawChart(window, figure_handle, )
     
 
     # item_list = list(reviews_per_product.keys())
@@ -355,7 +365,7 @@ def main():
                 try:
                     data_path, full_reviews, meta_data_in_raw,embed_sort_data_in_raw = load_data_window()
                     product_group = osp.basename(osp.normpath(data_path))
-                    status_text, overall_score_dict, avg, count = run_basic_analysis(full_reviews, meta_data_in_raw)
+                    status_text, overall_score_dict, avg, count = run_basic_analysis(full_reviews, meta_data_in_raw, product_group=product_group)
                     window['status_text'].update(status_text)
                     figure_handle = scatter_plot_ratings(avg, count, product_group)
                     drawChart(window, figure_handle)

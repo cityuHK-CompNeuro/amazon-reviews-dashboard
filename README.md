@@ -16,20 +16,20 @@ $ pip install -r requirements.txt
 
 # Loading Data
 ## Folder Structure
-GUI requires a particular folder structure to complete the analysis. For each dataset, the GUI requires a \"\* _5.json\" and \"meta_ \*.json"  
+GUI requires a particular folder structure to complete the analysis. For each dataset, the GUI requires a \"\* _5.json\" a \"meta_ \*.json"  
   
-Three datasets have been tested: Music, Kitchen, and Pets  
+One dataset has been tested: Kitchen  
 Please organize the folder structure as follows:  
-Data
-- Music
+
+<!-- - Music
     - CDs_and_Vinyl_5.json
-    - meta_CDs_and_Vinyl.json
+    - meta_CDs_and_Vinyl.json -->
 - Kitchen
     - Prime_Pantry_5.json
     - meta_Prime_Pantry.json
-- Pets
+<!-- - Pets
     - meta_Pet_Supplies.json
-    - Pet_Supplies_5.json
+    - Pet_Supplies_5.json -->
 
 To complete the semantic analysis, the 
 
