@@ -44,6 +44,13 @@ def load_data_window():
                 
                 data_file = osp.join(values["-IN-"], filename_switcher[products_type][0] + '.json')
                 meta_file = osp.join(values["-IN-"], filename_switcher[products_type][1] + '.json')
+                try:
+                    embed_sort_file = osp.join(values["-IN-"], filename_switcher[products_type][2] + '.json')
+                    embed_sort_data_in_raw = read_json(embed_sort_file)
+                    embed_sort_per_asin = sort_reviews_by_product(embed_sort_data_in_raw)
+                    print(f'Loaded Embedding file from {embed_sort_file}')
+                except:
+                    pass
                 print(f'data_file {data_file}')
 
                 if not osp.exists(data_file):
@@ -63,7 +70,7 @@ def load_data_window():
                     meta_struct = {}
                 
                 load_win.close()
-                return values["-IN-"], reviews_struct, meta_struct
+                return values["-IN-"], reviews_struct, meta_struct, embed_sort_per_asin
         load_win.close()
     except Exception as e:
         sg.popup_error_with_traceback(f'Unable to Load data via load_data_window.  Here is the info:', e)
@@ -102,12 +109,13 @@ def sort_reviews_by_product(full_reviews):
     reviews_per_product = {}
     try:
         for fr in tqdm(full_reviews):
-            asin_tmp = fr['asin']
-            if asin_tmp in reviews_per_product:
-                reviews_per_product[asin_tmp].append(fr)
-            else:
-                reviews_per_product[asin_tmp] = []
-                reviews_per_product[asin_tmp].append(fr)
+            if fr:
+                asin_tmp = fr['asin']
+                if asin_tmp in reviews_per_product:
+                    reviews_per_product[asin_tmp].append(fr)
+                else:
+                    reviews_per_product[asin_tmp] = []
+                    reviews_per_product[asin_tmp].append(fr)
     except Exception as e:
         print(f'Unable to Sort Reviews by Product: {e}')
     return reviews_per_product
@@ -209,7 +217,7 @@ def sort_helpful_reviews(reviews_per_product):
             if len(review_list) == 0:
                 continue
             sorted_recommended_reviews[product] = [review_list[i] for i in np.argsort(num_votes_dict[product])][::-1]
-            
+
     except Exception as e:
         print(f'Unable to Sort Recommended Reviews: {e}')
     return sorted_recommended_reviews
@@ -222,7 +230,7 @@ def scatter_plot_ratings(avg, count, product_type):
     fig, ax = plt.subplots(1, 1)
     ax.scatter(count,avg, c='k')
     ax.set_xlabel('Number of Reviews')
-    ax.set_ylabel('Average Stars')
+    ax.set_ylabel('Average Rating')
     ax.set_title(f'Distribution of Reviews per Product\n {product_type} Dataset')
 
     # plt.show()
@@ -255,8 +263,10 @@ def main():
 
     layout = [[sg.MenubarCustom(menu_def, tearoff=False)],
               [sg.Text(text="Please begin by Loading data via File->Load Data", key='status_text'),
-              sg.Text("Most Helpful Reviews of Selected Product", pad=(225, 0), key='review-reader-status')],
-              [sg.Canvas(key='figCanvas'), sg.Listbox(["Selected Reviews Will Display Here"], size=(60,5), enable_events=False, key='review-reader-0'),],
+              sg.Text("Most Helpful Reviews of Selected Product", pad=(225, 0), key='review-reader-status'),
+              sg.Text("Exemplar Reviews of Selected Product", pad=(75, 0), key='review-reader-status')],
+              [sg.Canvas(key='figCanvas'), sg.Listbox(["Selected Reviews Will Display Here"], size=(60,5), pad=(0, 0), enable_events=False, key='review-reader-0'),
+              sg.Listbox(["Selected Exemplar Reviews Will Display Here"], size=(60,5), pad=(0, 0), enable_events=False, key='review-reader-1'),],
               [sg.Text(text="Please Choose an Evaluation Criterion", key='eval_crit_text'), sg.Text(text="Highest Rated Products", pad=(200, 0), key='high_drop_text'),
               sg.Text(text="Lowest Rated Products", pad=(25, 0), key='low_drop_text')],
               [sg.Listbox(['Number of Reviews', 'Avg Rating', 'Rating St Dev', 'Rating Median'], size=(18,5), enable_events=True, key='rating-drop-0'),
@@ -270,7 +280,7 @@ def main():
     product_type_ind = 0
 
     filename_switcher = {'Music': ['CDs_and_Vinyl_5', 'meta_CDs_and_Vinyl'],
-                        'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry'],
+                        'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry', 'embed_sort_Prime_Pantry'],
                         'Pets': ['Pet_Supplies_5', 'meta_Pet_Supplies']}
     
     # Create the window
@@ -293,13 +303,25 @@ def main():
             time.sleep(1)
 
         try:
+            # filenames
             products_type = osp.basename(osp.normpath(data_path))
             data_file = osp.join(data_path, filename_switcher[products_type][0] + '.json')
             meta_file = osp.join(data_path, filename_switcher[products_type][1] + '.json')
+            try:
+                embed_sort_file = osp.join(data_path, filename_switcher[products_type][2] + '.json')
+                embed_sort_data_in_raw = read_json(embed_sort_file)
+                embed_sort_per_asin = sort_reviews_by_product(embed_sort_data_in_raw)
+                print(f'Loaded Embedding file from {embed_sort_file}')
+            except:
+                pass
+
+            # import 
             full_reviews = read_json(data_file)
             meta_data_in_raw = read_json(meta_file)
+
         except Exception as e:
-            data_path, full_reviews, meta_data_in_raw = load_data_window()
+            data_path, full_reviews, meta_data_in_raw, embed_sort_data_in_raw = load_data_window()
+        
 
     except Exception as e:
         sg.popup_error_with_traceback(f'Load error.  Here is the info:', e)
@@ -307,6 +329,7 @@ def main():
     # Run Initial Analysis Automatically
     status_text, overall_score_dict, avg, count = run_basic_analysis(full_reviews, meta_data_in_raw, product_group=products_type)
     window['status_text'].update(status_text)
+    product_group = products_type
     figure_handle = scatter_plot_ratings(avg, count, products_type)
     drawChart(window, figure_handle)
     
@@ -330,7 +353,7 @@ def main():
                 break
             elif event == 'Load Data':
                 try:
-                    data_path, full_reviews, meta_data_in_raw = load_data_window()
+                    data_path, full_reviews, meta_data_in_raw,embed_sort_data_in_raw = load_data_window()
                     product_group = osp.basename(osp.normpath(data_path))
                     status_text, overall_score_dict, avg, count = run_basic_analysis(full_reviews, meta_data_in_raw)
                     window['status_text'].update(status_text)
@@ -365,6 +388,12 @@ def main():
                 window['high_drop_text'].update(title_switcher[tmp_str][0])
                 window['low_drop_text'].update(title_switcher[tmp_str][1])
 
+                # Update Figure
+                # if tmp_str == 'Rating St Dev':
+                #     std = np.array([np.std(value) for key, value in overall_score_dict.items()])
+                #     figure_handle = scatter_plot_ratings(std, count, product_group)
+                #     update_chart(window, figure_handle)
+
             elif event == 'rating-drop-1':
                 # get recommended review text for selected product
                 rev_exists = True
@@ -385,11 +414,29 @@ def main():
                     else:
                         review_text_to_print = [r['reviewText'] for r in selected_reviews[:num_to_print]]
 
-                print(f'sorted_recommended_reviews: {review_text_to_print} \n\n')
+                # print(f'sorted_recommended_reviews: {review_text_to_print} \n\n')
                 # window['review-reader-0'].update(review_text_to_print)
 
                     
                 window['review-reader-0'].update(review_text_to_print)
+
+                # Show Embedding Analysis
+                exemplar_exists = True
+                try:
+                    exemplar_reviews = embed_sort_per_asin[tmp_asin]
+                    # print(f'Exemplars {exemplar_reviews[:3]}')
+                except Exception as e:
+                    exemplar_text_to_print = [f'No exemplar reviews for: {product_title}']
+                    print(f'No recommended reviews for: {exemplar_text_to_print}')
+                
+                if exemplar_exists:
+                    if len(exemplar_reviews) < num_to_print:
+                        exemplar_text_to_print = [r['reviewText'] for r in exemplar_reviews]
+                    else:
+                        exemplar_text_to_print = [r['reviewText'] for r in exemplar_reviews[:num_to_print]]
+                
+                window['review-reader-1'].update(exemplar_text_to_print)
+
             elif event == 'rating-drop-2':
                 # get recommended review text for selected product
                 rev_exists = True
@@ -410,11 +457,26 @@ def main():
                     else:
                         review_text_to_print = [r['reviewText'] for r in selected_reviews[:num_to_print]]
 
-                print(f'sorted_recommended_reviews: {review_text_to_print} \n\n')
-                # window['review-reader-0'].update(review_text_to_print)
-
+                # print(f'sorted_recommended_reviews: {review_text_to_print} \n\n')
                     
                 window['review-reader-0'].update(review_text_to_print)
+
+                # Show Embedding Analysis
+                exemplar_exists = True
+                try:
+                    exemplar_reviews = embed_sort_per_asin[tmp_asin]
+                    # print(f'Exemplars {exemplar_reviews[:3]}')
+                except Exception as e:
+                    exemplar_text_to_print = [f'No exemplar reviews for: {product_title}']
+                    print(f'No recommended reviews for: {exemplar_text_to_print}')
+                
+                if exemplar_exists:
+                    if len(exemplar_reviews) < num_to_print:
+                        exemplar_text_to_print = [r['reviewText'] for r in exemplar_reviews]
+                    else:
+                        exemplar_text_to_print = [r['reviewText'] for r in exemplar_reviews[:num_to_print]]
+                
+                window['review-reader-1'].update(exemplar_text_to_print)
 
 
             # elif event == 'Resample':
