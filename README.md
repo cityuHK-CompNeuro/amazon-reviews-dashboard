@@ -74,6 +74,16 @@ $ pip install -r requirements.txt
 # Example Functionality
 I created animated gifs to illustrate the UI function.  
 
+  
+![Individual Letter Prediction](/README_support/dash_gif.gif)  
+  
+<!-- ![Example Artist Prediction](/README_support/frank_z.PNG)   -->
+  
+<!-- ![Review Generation](/README_support/My_gen.gif)   -->
+  
+<!-- ![Example Artist Prediction](/README_support/frank_z.PNG)   -->
+  
+
 # Design Thinking
 ### Ratings Analysis
 The first thing I do when evaluating products or restaurants online, is look for the ratings/stars and the number of reviews. This is plotted in the scatter plot, showing the number of reviews on the x-axis and the average rating on the y-axis, with each point being a single product.  
