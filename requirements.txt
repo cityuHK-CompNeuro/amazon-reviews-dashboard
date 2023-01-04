@@ -3,3 +3,5 @@ PySimpleGUI
 numpy
 matplotlib
 tqdm
+sentence_transformers
+pytorch

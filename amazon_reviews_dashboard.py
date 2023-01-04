@@ -25,9 +25,9 @@ def load_data_window():
 
         load_win = sg.Window("Load Data", load_layout)
 
-        filename_switcher = {'Music': ['CDs_and_Vinyl_5', 'meta_CDs_and_Vinyl'],
-                            'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry', 'embed_sort_Prime_Pantry'],
-                            'Pets': ['Pet_Supplies_5', 'meta_Pet_Supplies']}
+        filename_switcher = {'Music': ['CDs_and_Vinyl_5', 'meta_CDs_and_Vinyl', 'Music_embeds'],
+                            'Kitchen': ['Prime_Pantry_5', 'meta_Prime_Pantry', 'Kitchen_embeds'],
+                            'Pets': ['Pet_Supplies_5', 'meta_Pet_Supplies', 'Pets_embeds']}
 
         while True:
             event, values = load_win.read()
