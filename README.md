@@ -1,4 +1,4 @@
-# Amazon Reviews Dashboard
+# Amazon Reviews Dashboard (Q2)
 I performed an exploratory analysis on the [Amazon Reviews 2018 dataset](https://jmcauley.ucsd.edu/data/amazon/), implemented semantic analysis via text embeddings generated from a large language model, and built a GUI dashboard to interactively explore the results.
 
 
@@ -62,9 +62,9 @@ There is no need to run the analysis, just run the 'amazon_reviews_dashboard.py'
 
 # Dependencies
 ### GUI
-PySimpleGUI
-json
-tqdm
+PySimpleGUI  
+json  
+tqdm  
 
 ### Analysis
 * The analysis has already been run, and need not be run again for the full functionality of the GUI. These packages are only necessary when replicating the analysis  
